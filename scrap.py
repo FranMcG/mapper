@@ -38,3 +38,29 @@ for geolocator in geocoders:
     else:
         print location.longitude, location.latitude
     print
+
+
+with open_workbook(fileName) as wb:
+    ##### Need to confirm this  #####
+    # we are using the 2nd sheet here
+    #worksheet = wb.sheet_by_index(0)
+    worksheet = wb.sheet_by_name(sheetName)
+    # getting number or rows and setting current row as 0 -e.g first
+    num_rows, curr_row = worksheet.nrows - 1, 0
+    # retrieving keys values(first row values)
+    keyValues = [x.value for x in worksheet.row(0)]
+    # building dict
+    data = []
+    # iterating through all rows and fulfilling our dictionary
+    while curr_row < min(num_rows,last_row):
+        d = dict()
+        curr_row += 1
+        for idx, val in enumerate(worksheet.row(curr_row)):
+            x = val.value
+            if x:
+                if isinstance(x,unicode):
+                    d[keyValues[idx]]= x
+                else:
+                    d[keyValues[idx]]= str( int(x) )
+        data.append(d)
+

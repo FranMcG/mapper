@@ -12,6 +12,7 @@ import os
 import time
 import pywinauto
 from xlrd import open_workbook
+from xlwt import Workbook
 # How hacky is this ?!?!?
 # Module has different name in Python3 vs Python2!
 # Try the python 3 module & fallback to python2
@@ -24,21 +25,19 @@ debug=False
 #debug=True
 
 #last record to read from xls defining channel attributes
-last_channel=110
+last_row=110
 
 #xls = r'C:\Users\fran\Downloads\150325 SID LCN Stream.xlsx'
-xls = r'C:\Documents and Settings\xmltv\Parser\channels.xlsx'
-xls = r'C:\Users\Public\xmltv\channels.xlsx'
+##xls = r'C:\Documents and Settings\xmltv\Parser\channels.xlsx'
+##xls = r'C:\Users\Public\xmltv\channels.xlsx'
 
 
-def xls_to_list_of_dicts(fileName, sheetName ):
+def xls_to_list_of_dicts(fileName, sheetName):
     """
-    Simple wrapper for xld to read excel file in as list of dictionaries
+    Simple wrapper to write list of dictionaries to xls
     """
 
     with open_workbook(fileName) as wb:
-        ##### Need to confirm this  #####
-        # we are using the 2nd sheet here
         #worksheet = wb.sheet_by_index(0)
         worksheet = wb.sheet_by_name(sheetName)
         # getting number or rows and setting current row as 0 -e.g first
@@ -47,8 +46,8 @@ def xls_to_list_of_dicts(fileName, sheetName ):
         keyValues = [x.value for x in worksheet.row(0)]
         # building dict
         data = []
-        # iterating through all rows and fulfilling our dictionary
-        while curr_row < min(num_rows,last_channel):
+        # iterating through all rows and filling with our dictionaries
+        while curr_row < min(num_rows,last_row):
             d = dict()
             curr_row += 1
             for idx, val in enumerate(worksheet.row(curr_row)):
@@ -60,6 +59,39 @@ def xls_to_list_of_dicts(fileName, sheetName ):
                         d[keyValues[idx]]= str( int(x) )
             data.append(d)
         return data
+
+def list_of_dicts_to_xls(fileName, datalist, sheetName):
+    """
+    Simple wrapper for xld to read excel file in as list of dictionaries
+    """
+    w = Workbook()
+    # Add next "sheet x" if sheetName is None
+    if sheetName == None:
+        ws = w.add_sheet('sheet1')
+    else:
+        ws = w.add_sheet(sheetName)
+
+    #find index longest list - this has the most keys/headers
+    # making sure that's the number that will get created!
+    # get length of longest element
+    x = max([ len(x) for x in datalist])
+    # get index of first element that long
+    idx = [ datalist.index(p) for p in datalist if len(p)== x][0]
+    #### TODO find location of longest list
+    # get list of columns in that row
+    columns = list(datalist[idx].keys())
+    for colIdx, header in enumerate(datalist[idx]):
+        # Use dictionary keys as first row values(e.g. headers)
+        ws.write(0, colIdx, header)
+
+        for rowIdx,itemvalue in enumerate(datalist):
+            try:
+                ws.write(rowIdx + 1, colIdx, itemvalue[header])
+            except KeyError as e:
+                pass
+    w.save(fileName)
+    print "xls written"
+    return
 
 
 def treeview_add_child(  ctrl, node, opt ):
