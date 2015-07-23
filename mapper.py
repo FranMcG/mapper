@@ -9,6 +9,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
+import argparse
 import geopy.geocoders
 from geopy.exc import *
 import matplotlib.pyplot as plt
@@ -28,18 +29,16 @@ from pykml.factory import GX_ElementMaker as GX
 from pykml.parser import Schema
 from lxml import etree
 
-debug = True
-recursion = 0
-
-coders_used = {}
-xls = r'C:\Users\fran\Python\mapper\Site list.xlsx'
-new_xls = r'C:\Users\fran\Python\mapper\geocoded_list.xlsx'
-uncoded_xls = r'C:\Users\fran\Python\mapper\geocoded_list.xlsx'
+# Some variables/statics
+debug = False
+#debug = True
+run_geocoders=True
+#run_geocoders=False
 WD = r'C:\Users\fran\Python\mapper'
-tabName = 'Sites'
-tabName = 'New'
-newTab = 'geocoded'
-kmlfile= 'kmlfile'
+recursion = 0
+#default_xls = r'C:\Users\fran\Python\mapper\Site list.xlsx'
+default_xls = r'C:\Users\fran\Python\mapper\IPG.xlsx'
+coders_used = {}
 oc_key = 'd24196d372ad23c9d43b06bf9fb51197'
 
 #Next 20 or so lines snipped from __int.py of geopy
@@ -262,50 +261,7 @@ def create_kml_tour(addresses, filename):
             )
           ),
         )
-        # spin around the address
-        for aspect in range(0,360,10):
-
-            tour_doc.Document[gxns+"Tour"].Playlist.append(
-                GX.FlyTo(
-                    GX.duration(0.25),
-                    GX.flyToMode("smooth"),
-                        KML.LookAt(
-                              KML.longitude(address['longitude']),
-                              KML.latitude(address['latitude']),
-                              KML.altitude(0),
-                              KML.heading(aspect),
-                              KML.tilt(tilt),
-                              KML.range(distance),
-                              KML.altitudeMode("relativeToGround"),
-                        )
-                    )
-            )
-
-        for angle in range(0,360,10):
-            tour_doc.Document[gxns+"Tour"].Playlist.append(
-              GX.FlyTo(
-                GX.duration(0.25),
-                GX.flyToMode("smooth"),
-                KML.LookAt(
-                  KML.longitude(address['longitude']),
-                  KML.latitude(address['latitude']),
-                  KML.altitude(0),
-                  KML.heading(angle),
-##                  KML.tilt(address['tilt']),
-##                  KML.range(address['range']),
-                  KML.tilt(tilt),
-                  KML.range(distance),
-                  KML.altitudeMode("relativeToGround"),
-                )
-              )
-            )
-
-        tour_doc.Document[gxns+"Tour"].Playlist.append(GX.Wait(GX.duration(1.0)))
-
-    #    tour_doc.Document[gxns+"Tour"].Playlist.append(
-    #        GX.TourControl(GX.playMode("pause"))
-    #    )
-
+        
         # add a placemark for the address
         tour_doc.Document.Folder.append(
           KML.Placemark(
@@ -362,6 +318,52 @@ def create_kml_tour(addresses, filename):
               )
             )
         )
+        
+        
+        # spin around the address
+        for aspect in range(0,360,10):
+
+            tour_doc.Document[gxns+"Tour"].Playlist.append(
+                GX.FlyTo(
+                    GX.duration(0.25),
+                    GX.flyToMode("smooth"),
+                        KML.LookAt(
+                              KML.longitude(address['longitude']),
+                              KML.latitude(address['latitude']),
+                              KML.altitude(0),
+                              KML.heading(aspect),
+                              KML.tilt(tilt),
+                              KML.range(distance),
+                              KML.altitudeMode("relativeToGround"),
+                        )
+                    )
+            )
+
+        for angle in range(0,360,10):
+            tour_doc.Document[gxns+"Tour"].Playlist.append(
+              GX.FlyTo(
+                GX.duration(0.25),
+                GX.flyToMode("smooth"),
+                KML.LookAt(
+                  KML.longitude(address['longitude']),
+                  KML.latitude(address['latitude']),
+                  KML.altitude(0),
+                  KML.heading(angle),
+##                  KML.tilt(address['tilt']),
+##                  KML.range(address['range']),
+                  KML.tilt(tilt),
+                  KML.range(distance),
+                  KML.altitudeMode("relativeToGround"),
+                )
+              )
+            )
+
+        tour_doc.Document[gxns+"Tour"].Playlist.append(GX.Wait(GX.duration(1.0)))
+
+    #    tour_doc.Document[gxns+"Tour"].Playlist.append(
+    #        GX.TourControl(GX.playMode("pause"))
+    #    )
+
         # fly to a space viewpoint
         tour_doc.Document[gxns+"Tour"].Playlist.append(
           GX.FlyTo(
@@ -382,7 +384,7 @@ def create_kml_tour(addresses, filename):
     # check that the KML document is valid using the Google Extension XML Schema
     #assert(Schema("kml22gx.xsd").validate(tour_doc))
     #always bombs
-    print etree.tostring(tour_doc, pretty_print=True)
+#    print etree.tostring(tour_doc, pretty_print=True)
 
     # output a KML file (named based on the Python script)
     outfile = kmlfile + '_tour.kml'
@@ -396,10 +398,10 @@ def draw_map(points):
     '''
 
     # Basic map details
-##    bm = Basemap(llcrnrlon=-20,llcrnrlat=33,urcrnrlon=35,urcrnrlat=70, \
-##                        projection='cyl', lon_0= 0,lat_0=10,resolution='i')
-    bm = Basemap(llcrnrlon=-10.5,llcrnrlat=49.5,urcrnrlon=3.5,urcrnrlat=59.5,
-            resolution='i',projection='tmerc',lon_0=-4.36,lat_0=54.7)
+    bm = Basemap(llcrnrlon=-20,llcrnrlat=33,urcrnrlon=35,urcrnrlat=70, \
+                        projection='cyl', lon_0= 0,lat_0=10,resolution='i')
+#    bm = Basemap(llcrnrlon=-10.5,llcrnrlat=49.5,urcrnrlon=3.5,urcrnrlat=59.5,
+#            resolution='i',projection='tmerc',lon_0=-4.36,lat_0=54.7)
 
     #Fill the globe with a blue color
     bm.drawmapboundary(fill_color='aqua')
@@ -423,32 +425,51 @@ def draw_map(points):
     return
 
 def main():
-    #
-    # TODO Add argparse
-    #
+   
     os.chdir(WD)
-    #read in site list
-    sites = xls_to_list_of_dicts(xls, tabName )
 
-    #populate list of coders_used
-    for address in sites:
-        coders_used[address['Site']] = []
+    parser = argparse.ArgumentParser()
+    #parser.add_argument("--output", help = "output file")
+    parser.add_argument('file', type=str,  help = "Excel file with addresses to be geocoded", nargs='?', default =default_xls)
+#    parser.add_argument('-g', '--grab', nargs = '?', const = 1, type = str, default = 'Y')
+    args = parser.parse_args()
+    xls_input =args.file
+    xls_dir = os.path.dirname(xls)
+    xls_basename=os.path.basename(xls)
+    xls_basename, xls_extension=os.path.splitext(xls_input)
+    new_xls =xls_basename+'_geocoded_'+xls_extension
+    uncoded_xls =xls_basename+'_uncoded_'+xls_extension
+    tabName = 'Sites'
+    tabName = 'New'
+    newTab = 'geocoded'
+    kmlfile= 'kmlfile'
 
-    # Add longitude & latitude
-#    sites_coded = xls_to_list_of_dicts(new_xls, newTab )
-    sites_coded, sites_uncoded = add_longitude_and_latitude(sites, geocoders)
-    if debug: print "Finished coding sites"
+
+    # Add longitude & latitude    
+    if run_geocoders:
+        #read in site list
+        sites = xls_to_list_of_dicts(xls_input, tabName )
+    
+        #populate list of coders_used
+        for address in sites:
+            coders_used[address['Site']] = []
+
+        sites_coded, sites_uncoded = add_longitude_and_latitude(sites, geocoders)
+        if debug: print "Finished coding sites"
+       # Save co-ords with data in xls, list of uncoded sites if there are any & coders used (TODO)
+        list_of_dicts_to_xls( new_xls, sites_coded, newTab)
+        if len(sites_uncoded) > 0:
+                list_of_dicts_to_xls( uncoded_xls, sites_uncoded, tabName)
+    #    list_of_dicts_to_xls( 'coders.xls', coders_used, None)
+        if debug: print "Saved excels"
+    else:
+        print 'Skipping geocoding'      
+        # Load previously geocoded addresses into sites_coded so we have some data
+        sites_coded = xls_to_list_of_dicts(new_xls, newTab )
 
     # Add reverse info from what3words
-    add_what3words(sites_coded)
-    if debug: print "Finished adding what3words"
-
-    #Save co-ords with data in xls
-    list_of_dicts_to_xls( new_xls, sites_coded, newTab)
-    list_of_dicts_to_xls( 'coders.xls', coders_used, None)
-    if len(sites_uncoded) > 0:
-            list_of_dicts_to_xls( uncoded_xls, sites_uncoded, tabName)
-    if debug: print "Saved excels"
+#    add_what3words(sites_coded)
+ #   if debug: print "Finished adding what3words"
 
     #Save simple kml with all the sites
     create_kml(sites_coded, kmlfile)
